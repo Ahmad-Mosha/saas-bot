@@ -1,0 +1,33 @@
+# Node modules & dependencies
+node_modules/
+.pnpm-store/
+
+# Build files
+apps/api/dist/
+apps/client/.next/
+apps/client/out/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+
+# Logs & Debugging
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Bun cache
+.bun/
