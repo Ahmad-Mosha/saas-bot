@@ -37,6 +37,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { StatsCard } from "@/components/dashboard/StatsCard";
+import { ChatbotCard } from "@/components/dashboard/ChatbotCard";
 
 export default function DashboardPage() {
   const [activeChatbots, setActiveChatbots] = useState([
@@ -72,6 +74,37 @@ export default function DashboardPage() {
     },
   ]);
 
+  const stats = [
+    {
+      title: "Total Users",
+      value: "2,310",
+      icon: Users,
+      change: "+12%",
+      positive: true,
+    },
+    {
+      title: "Total Messages",
+      value: "14,478",
+      icon: MessageSquare,
+      change: "+24%",
+      positive: true,
+    },
+    {
+      title: "Avg. Satisfaction",
+      value: "4.6",
+      icon: PieChart,
+      change: "+0.2",
+      positive: true,
+    },
+    {
+      title: "Active Bots",
+      value: "3",
+      icon: Bot,
+      change: "0",
+      positive: null,
+    },
+  ];
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-8">
@@ -102,69 +135,15 @@ export default function DashboardPage() {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            {
-              title: "Total Users",
-              value: "2,310",
-              icon: <Users className="h-5 w-5 text-blue-400" />,
-              change: "+12%",
-              positive: true,
-            },
-            {
-              title: "Total Messages",
-              value: "14,478",
-              icon: <MessageSquare className="h-5 w-5 text-purple-400" />,
-              change: "+24%",
-              positive: true,
-            },
-            {
-              title: "Avg. Satisfaction",
-              value: "4.6",
-              icon: <PieChart className="h-5 w-5 text-pink-400" />,
-              change: "+0.2",
-              positive: true,
-            },
-            {
-              title: "Active Bots",
-              value: "3",
-              icon: <Bot className="h-5 w-5 text-green-400" />,
-              change: "0",
-              positive: null,
-            },
-          ].map((stat, i) => (
-            <Card
+          {stats.map((stat, i) => (
+            <StatsCard
               key={i}
-              className="border-blue-500/20 bg-card/50 backdrop-blur-sm"
-            >
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground text-sm">
-                      {stat.title}
-                    </span>
-                    <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-2xl font-bold">{stat.value}</span>
-                      {stat.change && (
-                        <span
-                          className={`text-xs font-medium ${
-                            stat.positive === null
-                              ? "text-muted-foreground"
-                              : stat.positive
-                              ? "text-green-500"
-                              : "text-red-500"
-                          }`}
-                        >
-                          {stat.change}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                    {stat.icon}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              change={stat.change}
+              positive={stat.positive}
+            />
           ))}
         </div>
 
