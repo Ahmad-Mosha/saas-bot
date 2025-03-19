@@ -8,12 +8,19 @@
   },
   "private": true,
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "hono": "^4.7.4"
+    "@google/generative-ai": "^0.24.0",
+    "@prisma/client": "^6.5.0",
+    "better-sqlite3": "^11.9.0",
+    "drizzle-kit": "^0.30.5",
+    "drizzle-orm": "^0.40.0",
+    "hono": "^4.7.4",
+    "prisma": "^6.5.0"
   }
 }
