@@ -1,24 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
-  AtSign,
   Bell,
-  Camera,
-  Check,
+  Moon,
+  Sun,
   Globe,
   Lock,
+  Key,
+  Smartphone,
   Save,
-  Shield,
-  UserCircle,
+  ToggleLeft,
+  Palette,
 } from "lucide-react";
-
-import { DashboardLayout } from "@/components/dashboard/layout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -28,401 +23,382 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState("profile");
-  const [formState, setFormState] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
-    company: "Acme Inc.",
-    bio: "Product manager with a passion for AI and automation tools.",
-    avatarUrl: "https://github.com/shadcn.png",
-  });
+  const [saving, setSaving] = useState(false);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormState((prev) => ({ ...prev, [name]: value }));
-  };
+  // App settings
+  const [language, setLanguage] = useState("en");
+  const [theme, setTheme] = useState("system");
+  const [colorScheme, setColorScheme] = useState("blue");
+  const [timezone, setTimezone] = useState("UTC");
 
-  const handleSaveProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Simulate saving profile
+  // Notification settings
+  const [emailUpdates, setEmailUpdates] = useState(true);
+  const [chatbotAlerts, setChatbotAlerts] = useState(true);
+  const [weeklyReports, setWeeklyReports] = useState(true);
+  const [marketingEmails, setMarketingEmails] = useState(false);
+
+  // Security settings
+  const [twoFactorAuth, setTwoFactorAuth] = useState(false);
+  const [sessionTimeout, setSessionTimeout] = useState("30");
+
+  const saveSettings = () => {
+    setSaving(true);
     setTimeout(() => {
-      alert("Profile updated successfully!");
-    }, 500);
+      setSaving(false);
+    }, 1000);
   };
 
   return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">Account Settings</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your profile and account preferences
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+        <p className="text-muted-foreground">
+          Manage your application preferences and settings
+        </p>
+      </div>
 
-        {/* Settings Content */}
-        <Tabs
-          defaultValue="profile"
-          className="w-full"
-          onValueChange={setActiveTab}
-        >
-          <TabsList className="grid grid-cols-3 md:w-[400px] mb-8">
-            <TabsTrigger
-              value="profile"
-              className="data-[state=active]:bg-blue-500/10 data-[state=active]:text-blue-400"
-            >
-              <UserCircle className="w-4 h-4 mr-2" />
-              Profile
-            </TabsTrigger>
-            <TabsTrigger
-              value="security"
-              className="data-[state=active]:bg-blue-500/10 data-[state=active]:text-blue-400"
-            >
-              <Lock className="w-4 h-4 mr-2" />
-              Security
-            </TabsTrigger>
-            <TabsTrigger
-              value="notifications"
-              className="data-[state=active]:bg-blue-500/10 data-[state=active]:text-blue-400"
-            >
-              <Bell className="w-4 h-4 mr-2" />
-              Notifications
-            </TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="appearance" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="api">API Keys</TabsTrigger>
+        </TabsList>
 
-          {/* Profile Tab */}
-          <TabsContent value="profile">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="col-span-1">
-                <Card className="border-blue-500/20 bg-card/50 backdrop-blur-sm h-full">
-                  <CardHeader>
-                    <CardTitle>Profile Picture</CardTitle>
-                    <CardDescription>Update your profile photo</CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex flex-col items-center space-y-4">
-                    <div className="relative">
-                      <Avatar className="h-32 w-32 border-2 border-blue-500/30">
-                        <AvatarImage src={formState.avatarUrl} />
-                        <AvatarFallback>
-                          <UserCircle className="h-16 w-16" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <button className="absolute bottom-0 right-0 p-2 rounded-full bg-blue-500 text-white">
-                        <Camera className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="text-center">
-                      <h3 className="font-medium text-lg">{formState.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {formState.email}
-                      </p>
-                      <Badge className="mt-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
-                        Pro Plan
-                      </Badge>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-center">
-                    <Button variant="outline" className="border-blue-500/20">
-                      Remove Photo
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </div>
-
-              <div className="col-span-2">
-                <Card className="border-blue-500/20 bg-card/50 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle>Personal Information</CardTitle>
-                    <CardDescription>
-                      Update your profile details
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleSaveProfile} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="name">Full Name</Label>
-                          <Input
-                            id="name"
-                            name="name"
-                            placeholder="Your name"
-                            value={formState.name}
-                            onChange={handleInputChange}
-                            className="border-blue-500/20 bg-card/50"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="email">Email Address</Label>
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            placeholder="your.email@example.com"
-                            value={formState.email}
-                            onChange={handleInputChange}
-                            className="border-blue-500/20 bg-card/50"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="company">Company</Label>
-                          <Input
-                            id="company"
-                            name="company"
-                            placeholder="Your company"
-                            value={formState.company}
-                            onChange={handleInputChange}
-                            className="border-blue-500/20 bg-card/50"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="website">Website</Label>
-                          <div className="relative">
-                            <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                            <Input
-                              id="website"
-                              name="website"
-                              placeholder="https://yourwebsite.com"
-                              className="pl-10 border-blue-500/20 bg-card/50"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="bio">Bio</Label>
-                        <Textarea
-                          id="bio"
-                          name="bio"
-                          placeholder="Tell us about yourself"
-                          rows={4}
-                          value={formState.bio}
-                          onChange={handleInputChange}
-                          className="resize-none border-blue-500/20 bg-card/50"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Brief description for your profile. URLs are
-                          hyperlinked.
-                        </p>
-                      </div>
-                      <Button
-                        type="submit"
-                        className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 transition-opacity"
-                      >
-                        <Save className="h-4 w-4 mr-2" /> Save Changes
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* Security Tab */}
-          <TabsContent value="security">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="border-blue-500/20 bg-card/50 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle>Password</CardTitle>
-                  <CardDescription>Update your password</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="current-password">Current Password</Label>
-                    <Input
-                      id="current-password"
-                      type="password"
-                      className="border-blue-500/20 bg-card/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new-password">New Password</Label>
-                    <Input
-                      id="new-password"
-                      type="password"
-                      className="border-blue-500/20 bg-card/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password">
-                      Confirm New Password
-                    </Label>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      className="border-blue-500/20 bg-card/50"
-                    />
-                  </div>
-                  <Button className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 transition-opacity">
-                    Update Password
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="border-blue-500/20 bg-card/50 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle>Two-Factor Authentication</CardTitle>
-                  <CardDescription>
-                    Add an extra layer of security to your account
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <div className="flex items-center">
-                        <Shield className="h-5 w-5 text-purple-400 mr-2" />
-                        <h4 className="font-medium">
-                          Two-Factor Authentication
-                        </h4>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Secure your account with 2FA
-                      </p>
-                    </div>
-                    <Switch />
-                  </div>
-                  <div className="pt-4 border-t border-blue-500/10">
-                    <h4 className="text-sm font-medium mb-2">Recovery Codes</h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Recovery codes can be used to access your account in the
-                      event you lose access to your device.
+        <TabsContent value="appearance">
+          <Card>
+            <CardHeader>
+              <CardTitle>Appearance</CardTitle>
+              <CardDescription>
+                Customize how the application looks and behaves
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Theme</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Select a light or dark theme, or use system settings
                     </p>
-                    <Button variant="outline" className="border-blue-500/20">
-                      View Recovery Codes
-                    </Button>
                   </div>
-                </CardContent>
-              </Card>
+                  <div>
+                    <ThemeToggle />
+                  </div>
+                </div>
+                <Separator />
 
-              <Card className="border-blue-500/20 bg-card/50 backdrop-blur-sm md:col-span-2">
-                <CardHeader>
-                  <CardTitle>Login Sessions</CardTitle>
-                  <CardDescription>Manage your active sessions</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {[
-                    {
-                      device: "Windows PC",
-                      location: "San Francisco, CA",
-                      lastActive: "Active now",
-                      current: true,
-                    },
-                    {
-                      device: "iPhone 13",
-                      location: "Los Angeles, CA",
-                      lastActive: "2 days ago",
-                      current: false,
-                    },
-                  ].map((session, i) => (
-                    <div
-                      key={i}
-                      className={`flex items-center justify-between p-4 rounded-lg border ${
-                        session.current
-                          ? "border-blue-500/20 bg-blue-500/5"
-                          : "border-blue-500/10"
-                      }`}
+                <div className="space-y-2">
+                  <Label htmlFor="language">Language</Label>
+                  <Select value={language} onValueChange={setLanguage}>
+                    <SelectTrigger
+                      id="language"
+                      className="w-full sm:w-[240px]"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-full bg-blue-500/10">
-                          <Globe className="h-5 w-5 text-blue-400" />
-                        </div>
-                        <div>
-                          <div className="flex items-center">
-                            <h4 className="font-medium">{session.device}</h4>
-                            {session.current && (
-                              <Badge className="ml-2 bg-green-500/10 text-green-500 hover:bg-green-500/20">
-                                Current
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {session.location} • {session.lastActive}
-                          </p>
-                        </div>
-                      </div>
-                      {!session.current && (
-                        <Button
-                          variant="ghost"
-                          className="text-red-500 hover:text-red-600 hover:bg-red-500/5"
-                        >
-                          Logout
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    className="w-full border-blue-500/20"
-                  >
-                    Logout of All Devices
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+                      <SelectValue placeholder="Select language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="fr">French</SelectItem>
+                      <SelectItem value="de">German</SelectItem>
+                      <SelectItem value="es">Spanish</SelectItem>
+                      <SelectItem value="ja">Japanese</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          {/* Notifications Tab */}
-          <TabsContent value="notifications">
-            <Card className="border-blue-500/20 bg-card/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle>Notification Preferences</CardTitle>
-                <CardDescription>
-                  Control how you receive notifications
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {[
-                  {
-                    title: "Email Notifications",
-                    items: [
-                      { name: "Product updates", enabled: true },
-                      { name: "Weekly reports", enabled: true },
-                      { name: "Account activity", enabled: true },
-                      { name: "Marketing emails", enabled: false },
-                    ],
-                  },
-                  {
-                    title: "Push Notifications",
-                    items: [
-                      { name: "New chatbot messages", enabled: true },
-                      { name: "Performance alerts", enabled: true },
-                      { name: "Billing reminders", enabled: true },
-                      { name: "New features", enabled: false },
-                    ],
-                  },
-                ].map((group, i) => (
-                  <div key={i} className="space-y-4">
-                    <h3 className="font-medium">{group.title}</h3>
-                    <div className="space-y-3">
-                      {group.items.map((item, j) => (
+                <div className="space-y-2">
+                  <Label htmlFor="timezone">Timezone</Label>
+                  <Select value={timezone} onValueChange={setTimezone}>
+                    <SelectTrigger
+                      id="timezone"
+                      className="w-full sm:w-[240px]"
+                    >
+                      <SelectValue placeholder="Select timezone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="UTC">UTC</SelectItem>
+                      <SelectItem value="EST">Eastern Time (EST)</SelectItem>
+                      <SelectItem value="CST">Central Time (CST)</SelectItem>
+                      <SelectItem value="MST">Mountain Time (MST)</SelectItem>
+                      <SelectItem value="PST">Pacific Time (PST)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Color Scheme</Label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {["blue", "violet", "green", "pink", "orange"].map(
+                      (color) => (
                         <div
-                          key={j}
-                          className="flex items-center justify-between"
-                        >
-                          <span>{item.name}</span>
-                          <Switch checked={item.enabled} />
-                        </div>
-                      ))}
-                    </div>
-                    {i < 1 && (
-                      <div className="pt-2 border-t border-blue-500/10" />
+                          key={color}
+                          className={`h-8 rounded-md cursor-pointer transition-all ${
+                            colorScheme === color
+                              ? "ring-2 ring-offset-2 ring-blue-500"
+                              : ""
+                          }`}
+                          style={{
+                            backgroundColor:
+                              color === "blue"
+                                ? "#3b82f6"
+                                : color === "violet"
+                                ? "#8b5cf6"
+                                : color === "green"
+                                ? "#10b981"
+                                : color === "pink"
+                                ? "#ec4899"
+                                : "#f97316",
+                          }}
+                          onClick={() => setColorScheme(color)}
+                        />
+                      )
                     )}
                   </div>
-                ))}
-                <Button className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 transition-opacity">
-                  <Check className="mr-2 h-4 w-4" /> Save Preferences
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </DashboardLayout>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Preview of color schemes. This will be fully implemented in
+                    a future update.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={saveSettings} disabled={saving}>
+                {saving ? "Saving..." : "Save changes"}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          <Card>
+            <CardHeader>
+              <CardTitle>Notifications</CardTitle>
+              <CardDescription>
+                Configure when and how you receive notifications
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Email Updates</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive emails about your account activity
+                    </p>
+                  </div>
+                  <Switch
+                    checked={emailUpdates}
+                    onCheckedChange={setEmailUpdates}
+                  />
+                </div>
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Chatbot Alerts</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Get notified when your chatbots need attention
+                    </p>
+                  </div>
+                  <Switch
+                    checked={chatbotAlerts}
+                    onCheckedChange={setChatbotAlerts}
+                  />
+                </div>
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Weekly Reports</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Get a weekly summary of your chatbots' performance
+                    </p>
+                  </div>
+                  <Switch
+                    checked={weeklyReports}
+                    onCheckedChange={setWeeklyReports}
+                  />
+                </div>
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Marketing Emails</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive updates about new features and promotions
+                    </p>
+                  </div>
+                  <Switch
+                    checked={marketingEmails}
+                    onCheckedChange={setMarketingEmails}
+                  />
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={saveSettings} disabled={saving}>
+                {saving ? "Saving..." : "Save changes"}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="security">
+          <Card>
+            <CardHeader>
+              <CardTitle>Security</CardTitle>
+              <CardDescription>
+                Manage your account security settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">
+                      Two-Factor Authentication
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Add an extra layer of security to your account
+                    </p>
+                  </div>
+                  <Switch
+                    checked={twoFactorAuth}
+                    onCheckedChange={setTwoFactorAuth}
+                  />
+                </div>
+                {twoFactorAuth && (
+                  <div className="rounded-md bg-muted p-4">
+                    <div className="flex items-start gap-4">
+                      <Smartphone className="h-5 w-5 text-blue-500 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-medium">Setup Required</h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Two-factor authentication requires additional setup.
+                          Please visit your profile page to complete the setup
+                          process.
+                        </p>
+                        <Button variant="outline" size="sm" className="mt-2">
+                          Complete Setup
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <Separator />
+
+                <div className="space-y-2">
+                  <Label htmlFor="session">Session Timeout</Label>
+                  <Select
+                    value={sessionTimeout}
+                    onValueChange={setSessionTimeout}
+                  >
+                    <SelectTrigger id="session" className="w-full sm:w-[240px]">
+                      <SelectValue placeholder="Select timeout" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15 minutes</SelectItem>
+                      <SelectItem value="30">30 minutes</SelectItem>
+                      <SelectItem value="60">1 hour</SelectItem>
+                      <SelectItem value="120">2 hours</SelectItem>
+                      <SelectItem value="240">4 hours</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Your account will be automatically logged out after this
+                    period of inactivity
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={saveSettings} disabled={saving}>
+                {saving ? "Saving..." : "Save changes"}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="api">
+          <Card>
+            <CardHeader>
+              <CardTitle>API Keys</CardTitle>
+              <CardDescription>
+                Manage your API keys for integrating with our services
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="rounded-md bg-muted p-4">
+                  <div className="flex items-start gap-4">
+                    <Key className="h-5 w-5 text-blue-500 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-medium">Production Key</h4>
+                      <p className="font-mono text-xs bg-background border p-2 mt-2 rounded">
+                        sk_live_••••••••••••••••••••••••••••••
+                      </p>
+                      <div className="flex gap-2 mt-2">
+                        <Button variant="outline" size="sm">
+                          Show
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Copy
+                        </Button>
+                        <Button variant="destructive" size="sm">
+                          Regenerate
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-md bg-muted p-4">
+                  <div className="flex items-start gap-4">
+                    <Key className="h-5 w-5 text-amber-500 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-medium">Testing Key</h4>
+                      <p className="font-mono text-xs bg-background border p-2 mt-2 rounded">
+                        sk_test_••••••••••••••••••••••••••••••
+                      </p>
+                      <div className="flex gap-2 mt-2">
+                        <Button variant="outline" size="sm">
+                          Show
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Copy
+                        </Button>
+                        <Button variant="destructive" size="sm">
+                          Regenerate
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-sm text-muted-foreground mt-2">
+                  Your API keys provide full access to your account. Keep them
+                  secure and never share them publicly.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
