@@ -101,6 +101,8 @@ export class AuthService {
 
     // Remove password from response
     const { password, ...userWithoutPassword } = user;
+    console.log(userWithoutPassword);
+    console.log(password);
 
     return { user: userWithoutPassword, accessToken, refreshToken };
   }

@@ -51,12 +51,15 @@ authController.post("/login", zValidator("json", loginSchema), async (c) => {
       loginData
     );
 
-    return c.json({
-      message: AUTH_CONSTANTS.LOGIN_SUCCESS,
-      user,
-      accessToken,
-      refreshToken,
-    });
+    return c.json(
+      {
+        message: AUTH_CONSTANTS.LOGIN_SUCCESS,
+        user,
+        accessToken,
+        refreshToken,
+      },
+      200
+    );
   } catch (error) {
     return c.json(
       {
