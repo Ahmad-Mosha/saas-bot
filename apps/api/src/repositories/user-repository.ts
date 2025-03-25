@@ -20,13 +20,14 @@ export class UserRepository {
         username: userData.username,
         email: userData.email,
         password: hashedPassword,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })
       .returning();
 
     if (!user) {
       throw new Error("Failed to create user");
     }
-
     return user;
   }
 }
