@@ -39,21 +39,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { UserDisplayInfo } from "@/types/auth";
 
 interface HeaderProps {
-  user?: {
-    name: string;
-    email: string;
-    avatar?: string;
-  };
+  user?: UserDisplayInfo;
   onSidebarToggle?: () => void;
   notificationCount?: number;
+  onLogout?: () => void;
 }
 
 export function Header({
   user,
   onSidebarToggle,
   notificationCount = 0,
+  onLogout,
 }: HeaderProps) {
   const [showSearchMobile, setShowSearchMobile] = useState(false);
   const pathname = usePathname();
@@ -80,6 +79,13 @@ export function Header({
   };
 
   const sectionTitle = sectionTitles[activeSection] || "Dashboard";
+
+  // Handle logout click
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -196,7 +202,7 @@ export function Header({
                 <Avatar className="h-8 w-8">
                   <AvatarImage
                     src={user?.avatar || "https://github.com/shadcn.png"}
-                    alt={user?.name || "User"}
+                    alt={user?.username || "User"}
                   />
                   <AvatarFallback>
                     <User className="h-4 w-4" />
@@ -208,7 +214,7 @@ export function Header({
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">
-                    {user?.name || "User Name"}
+                    {user?.username || "User Name"}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {user?.email || "user@example.com"}
@@ -216,16 +222,20 @@ export function Header({
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/profile">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600">
+              <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>

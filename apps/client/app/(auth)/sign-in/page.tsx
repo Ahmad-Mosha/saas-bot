@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
-import Cookies from "js-cookie";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +23,9 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 
+// Import auth context hook
+import { useAuth } from "@/context/auth-context";
+
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -32,8 +34,12 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function SignInPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [localLoading, setLocalLoading] = useState(false);
+  const { login, isLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl") || "/dashboard";
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -43,23 +49,37 @@ export default function SignInPage() {
     },
   });
 
-  async function onSubmit(data: FormValues) {
-    setIsLoading(true);
+  // Rewrite to match exactly the same pattern used in sign-up page
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // Always prevent default form submission
 
-    // TODO: Implement actual authentication
-    console.log(data);
+    // Get the data from the form
+    const isValid = await form.trigger();
+    if (!isValid) return; // Stop if validation fails
 
-    // Simulate authentication delay
-    setTimeout(() => {
-      // Set a cookie to simulate user authentication
-      Cookies.set("auth_token", "user_is_authenticated", { expires: 7 });
+    const formData = form.getValues();
 
-      setIsLoading(false);
+    try {
+      setAuthError(null);
+      setLocalLoading(true);
 
-      // Navigate to dashboard after successful login
-      router.push("/dashboard");
-    }, 1000);
-  }
+      // Use the login function from auth context
+      await login({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      // Navigation is handled in the auth context
+    } catch (error) {
+      // Handle and display the error
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Authentication failed. Please try again.";
+      setAuthError(errorMessage);
+      setLocalLoading(false); // Reset loading state on error
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -128,10 +148,13 @@ export default function SignInPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {authError && (
+                  <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm mb-4">
+                    {authError}
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -147,6 +170,7 @@ export default function SignInPage() {
                     </p>
                   )}
                 </div>
+
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
@@ -170,12 +194,13 @@ export default function SignInPage() {
                     </p>
                   )}
                 </div>
+
                 <Button
                   type="submit"
                   className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 transition-opacity"
-                  disabled={isLoading}
+                  disabled={isLoading || localLoading}
                 >
-                  {isLoading ? "Signing in..." : "Sign In"}
+                  {isLoading || localLoading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
 

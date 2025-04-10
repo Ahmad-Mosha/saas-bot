@@ -6,6 +6,11 @@ import { Header } from "@/components/dashboard/Header";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { cn } from "@/lib/utils";
 
+// Import auth-related components
+import { ProtectedRoute } from "@/components/auth/protected-route";
+import { useAuth } from "@/context/auth-context";
+import { UserDisplayInfo } from "@/types/auth";
+
 export default function DashboardLayout({
   children,
 }: {
@@ -14,6 +19,9 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
+
+  // Get real user data from auth context
+  const { user, logout } = useAuth();
 
   // Handle window resize
   useEffect(() => {
@@ -25,13 +33,10 @@ export default function DashboardLayout({
         setSidebarOpen(true);
       }
     };
-
     // Initial check
     checkSize();
-
     // Add event listener
     window.addEventListener("resize", checkSize);
-
     // Cleanup
     return () => window.removeEventListener("resize", checkSize);
   }, []);
@@ -43,30 +48,38 @@ export default function DashboardLayout({
     }
   }, [pathname, isMobile]);
 
-  // Mock user data - would come from auth context in real app
-  const user = {
-    name: "John Doe",
-    email: "john@example.com",
-    avatar: "",
-  };
+  // Convert User to UserDisplayInfo
+  const userDisplayInfo: UserDisplayInfo | undefined = user
+    ? {
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+      }
+    : undefined;
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
-      {/* Sidebar */}
-      <Sidebar collapsed={!sidebarOpen} />
-
-      {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header
-          user={user}
-          onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-          notificationCount={3}
+    <ProtectedRoute>
+      <div className="flex h-screen w-full overflow-hidden bg-background">
+        {/* Sidebar */}
+        <Sidebar
+          collapsed={!sidebarOpen}
+          user={userDisplayInfo}
+          onLogout={logout}
         />
 
-        <main className={cn("flex-1 overflow-auto p-4")}>
-          <div className="mx-auto w-full max-w-6xl">{children}</div>
-        </main>
+        {/* Main Content */}
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Header
+            user={userDisplayInfo}
+            onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+            notificationCount={3}
+            onLogout={logout}
+          />
+          <main className={cn("flex-1 overflow-auto p-4")}>
+            <div className="mx-auto w-full max-w-6xl">{children}</div>
+          </main>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

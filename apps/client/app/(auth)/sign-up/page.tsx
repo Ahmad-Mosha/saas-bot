@@ -8,7 +8,6 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { motion } from "framer-motion";
 import { CheckCircle2, Sparkles } from "lucide-react";
-import Cookies from "js-cookie";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,9 +23,12 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 
+// Import auth context hook
+import { useAuth } from "@/context/auth-context";
+
 const formSchema = z
   .object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
+    username: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z
@@ -41,36 +43,53 @@ const formSchema = z
 type FormValues = z.infer<typeof formSchema>;
 
 export default function SignUpPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [localLoading, setLocalLoading] = useState(false);
+  const { register: registerUser, isLoading } = useAuth();
   const router = useRouter();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      username: "",
       email: "",
       password: "",
       confirmPassword: "",
     },
   });
 
-  async function onSubmit(data: FormValues) {
-    setIsLoading(true);
+  // Complete rewrite of the submit handler to prevent page refresh on error
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // Always prevent default form submission
 
-    // TODO: Implement actual sign up
-    console.log(data);
+    // Get the data from the form
+    const isValid = await form.trigger();
+    if (!isValid) return; // Stop if validation fails
 
-    // Simulate registration delay
-    setTimeout(() => {
-      // Set a cookie to simulate user authentication
-      Cookies.set("auth_token", "user_is_authenticated", { expires: 7 });
+    const formData = form.getValues();
 
-      setIsLoading(false);
+    try {
+      setAuthError(null);
+      setLocalLoading(true);
 
-      // Navigate to dashboard after successful registration
-      router.push("/dashboard");
-    }, 1000);
-  }
+      // Use the register function from auth context, omitting confirmPassword
+      await registerUser({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      // Navigation is handled in the auth context
+    } catch (error) {
+      // Handle and display the error
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Registration failed. Please try again.";
+      setAuthError(errorMessage);
+      setLocalLoading(false); // Reset loading state on error
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -139,22 +158,25 @@ export default function SignUpPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {authError && (
+                  <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm mb-4">
+                    {authError}
+                  </div>
+                )}
+
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name">Username</Label>
                   <Input
                     id="name"
                     type="text"
                     placeholder="John Doe"
-                    {...form.register("name")}
+                    {...form.register("username")}
                     className="border-blue-500/20 bg-background"
                   />
-                  {form.formState.errors.name && (
+                  {form.formState.errors.username && (
                     <p className="text-sm text-destructive">
-                      {form.formState.errors.name.message}
+                      {form.formState.errors.username.message}
                     </p>
                   )}
                 </div>
@@ -206,9 +228,11 @@ export default function SignUpPage() {
                 <Button
                   type="submit"
                   className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 transition-opacity"
-                  disabled={isLoading}
+                  disabled={isLoading || localLoading}
                 >
-                  {isLoading ? "Creating account..." : "Create Account"}
+                  {isLoading || localLoading
+                    ? "Creating account..."
+                    : "Create Account"}
                 </Button>
               </form>
 

@@ -43,6 +43,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { UserDisplayInfo } from "@/types/auth";
 
 interface NavigationItem {
   name: string;
@@ -57,14 +58,11 @@ interface NavigationSection {
 }
 
 interface SidebarProps {
-  user?: {
-    name: string;
-    email: string;
-    avatar?: string;
-  };
+  user?: UserDisplayInfo;
   plan?: string;
   collapsed?: boolean;
   onCollapse?: (collapsed: boolean) => void;
+  onLogout?: () => void;
 }
 
 export function Sidebar({
@@ -72,6 +70,7 @@ export function Sidebar({
   plan = "Free",
   collapsed = false,
   onCollapse,
+  onLogout,
 }: SidebarProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(collapsed);
   const pathname = usePathname();
@@ -87,6 +86,13 @@ export function Sidebar({
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
     onCollapse?.(!sidebarCollapsed);
+  };
+
+  // Handle logout click
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    }
   };
 
   const navigation: NavigationSection[] = [
@@ -315,16 +321,16 @@ export function Sidebar({
                 <Avatar className="h-6 w-6">
                   <AvatarImage
                     src={user?.avatar || "https://github.com/shadcn.png"}
-                    alt={user?.name || "User"}
+                    alt={user?.username || "User"}
                   />
                   <AvatarFallback>
-                    {user?.name?.charAt(0) || "U"}
+                    {user?.username?.charAt(0) || "U"}
                   </AvatarFallback>
                 </Avatar>
                 {!sidebarCollapsed && (
                   <div className="flex flex-col items-start text-left">
                     <span className="text-xs font-medium truncate max-w-[120px]">
-                      {user?.name || "User"}
+                      {user?.username || "User"}
                     </span>
                     <span className="text-xs text-muted-foreground truncate max-w-[120px]">
                       {user?.email || "user@example.com"}
@@ -336,24 +342,32 @@ export function Sidebar({
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <UserCircle className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/profile">
+                  <UserCircle className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard className="mr-2 h-4 w-4" />
-                <span>Billing</span>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/billing">
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  <span>Billing</span>
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <HelpCircle className="mr-2 h-4 w-4" />
-                <span>Help & Support</span>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/support">
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  <span>Help & Support</span>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Logout</span>
               </DropdownMenuItem>

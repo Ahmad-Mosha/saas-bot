@@ -9,10 +9,14 @@ const app = new Hono();
 app.use(logger());
 app.use(cors());
 
+// Static file middleware for public directory
+
 // Routes
 app.get("/", (c) => c.json({ message: "API is running" }));
 
 // Mount auth routes
 app.route("/auth", authController);
+
+// Mount bot routes
 
 export default app;
