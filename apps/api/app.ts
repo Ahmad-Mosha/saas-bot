@@ -2,7 +2,8 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import authController from "./src/controllers/auth-controller";
-
+import botController from "./src/controllers/bot.controller";
+import { authMiddleware } from "./src/middleware/auth-middleware";
 const app = new Hono();
 
 // Middleware
@@ -16,6 +17,9 @@ app.get("/", (c) => c.json({ message: "API is running" }));
 
 // Mount auth routes
 app.route("/auth", authController);
+
+app.use("/bots/*", authMiddleware);
+app.route("/bots", botController);
 
 // Mount bot routes
 
