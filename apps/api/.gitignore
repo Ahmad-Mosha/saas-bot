@@ -1,6 +1,8 @@
 # dependencies (bun install)
 node_modules
 
+sqlite.db
+migrations
 # output
 out
 dist
