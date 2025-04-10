@@ -13,6 +13,7 @@ apps/client/out/
 .env.development
 .env.production
 
+# Database
 apps/api/sqlite.db
 
 # Logs & Debugging
