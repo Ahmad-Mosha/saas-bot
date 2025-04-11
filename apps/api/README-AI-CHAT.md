@@ -64,6 +64,59 @@ The system allows users to create and interact with bots using Google's Gemini A
 
 - `GET /chat/conversation/:conversationId/messages` - Get all messages in a conversation
 
+### Streaming Chat Endpoints
+
+- `POST /chat/stream/bot/:botId` - Send a message to a bot with streaming response (new conversation)
+
+  ```json
+  {
+    "message": "How do I create a simple Express server?"
+  }
+  ```
+
+- `POST /chat/stream/bot/:botId/conversation/:conversationId` - Send a message with streaming response (existing conversation)
+
+  ```json
+  {
+    "message": "How do I add middleware to it?"
+  }
+  ```
+
+  These endpoints return a [Server-Sent Events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) stream with the following event types:
+
+  - `metadata` - Sent immediately with bot and conversation details
+  - `chunk` - Text chunks from the AI response as they are generated
+  - `done` - Indicates the response is complete
+  - `error` - Sent if an error occurs during streaming
+
+  Example client code for consuming the stream:
+
+  ```javascript
+  const eventSource = new EventSource("/chat/stream/bot/1");
+
+  eventSource.addEventListener("metadata", (event) => {
+    const metadata = JSON.parse(event.data);
+    console.log("Bot:", metadata.bot);
+    console.log("Conversation:", metadata.conversation);
+    // Initialize UI with metadata
+  });
+
+  eventSource.addEventListener("chunk", (event) => {
+    // Append this chunk of text to the UI
+    console.log("Received chunk:", event.data);
+  });
+
+  eventSource.addEventListener("done", () => {
+    // Response is complete, close the connection
+    eventSource.close();
+  });
+
+  eventSource.addEventListener("error", (event) => {
+    console.error("Stream error:", event.data);
+    eventSource.close();
+  });
+  ```
+
 ### Conversation Endpoints
 
 - `POST /conversations` - Create a new conversation
@@ -112,6 +165,7 @@ The solution uses two new tables:
 - **Response Format**: All chat responses include the full bot details along with the AI's response.
 - **Conversation Validation**: The system ensures that a conversation can only be used with the bot it was created for, preventing accidental mismatches.
 - **Conversation Transfer**: If you need to continue a conversation with a different bot, you can explicitly transfer ownership using the transfer endpoint.
+- **Streaming Responses**: The system supports streaming responses using Server-Sent Events, allowing for a more interactive chat experience where you can see the bot's response as it's being generated.
 
 ## How Bot Identity Works
 
@@ -162,14 +216,14 @@ curl -X POST http://localhost:3000/chat/bot/1 \
   }'
 ```
 
-### Continue a Conversation
+### Start a Streaming Conversation
 
 ```bash
-curl -X POST http://localhost:3000/chat/bot/1/conversation/1 \
+curl -X POST http://localhost:3000/chat/stream/bot/1 \
   -H "Authorization: Bearer YOUR_AUTH_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "message": "How do I add middleware to it?"
+    "message": "How do I create a simple Express server in Node.js?"
   }'
 ```
 
