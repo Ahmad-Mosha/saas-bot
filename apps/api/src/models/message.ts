@@ -9,6 +9,8 @@ export const messages = sqliteTable("messages", {
     .references(() => conversations.id, { onDelete: "cascade" }),
   role: text("role", { enum: ["user", "assistant"] }).notNull(),
   content: text("content").notNull(),
+  mediaType: text("mediaType", { enum: ["none", "image"] }).default("none"),
+  mediaUrl: text("mediaUrl"),
   createdAt: integer("createdAt", { mode: "timestamp" })
     .default(sql`(unixepoch())`)
     .notNull(),

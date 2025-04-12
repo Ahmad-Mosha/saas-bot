@@ -15,7 +15,12 @@ export class MessageRepository {
 
   async create(
     role: "user" | "assistant",
-    data: { conversationId: number; content: string }
+    data: {
+      conversationId: number;
+      content: string;
+      mediaType?: "none" | "image";
+      mediaUrl?: string;
+    }
   ): Promise<Message> {
     const insertData = {
       ...data,

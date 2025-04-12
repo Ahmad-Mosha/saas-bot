@@ -4,6 +4,10 @@ import { z } from "zod";
 import { chatService } from "../services/chat.service";
 import { conversationService } from "../services/conversation.service";
 import { HTTPException } from "hono/http-exception";
+import {
+  imageGenerationDto,
+  codeGenerationDto,
+} from "../types/dtos/message-dto";
 
 type Variables = {
   userId: string;
@@ -301,5 +305,398 @@ chatController.get("/conversation/:conversationId/messages", async (c) => {
     return c.json({ error: "Internal server error" }, 500);
   }
 });
+
+// Generate an image with a specific bot (new conversation)
+chatController.post(
+  "/image/bot/:botId",
+  zValidator("json", imageGenerationDto),
+  async (c) => {
+    try {
+      const userId = c.var.userId;
+
+      // Check rate limit
+      if (!imageRateLimit.canMakeRequest(userId)) {
+        return c.json(
+          {
+            error:
+              "Too many image generation requests. Please try again later.",
+          },
+          429
+        );
+      }
+
+      const botIdParam = c.req.param("botId");
+      const botId = parseInt(botIdParam, 10);
+
+      if (isNaN(botId)) {
+        return c.json({ error: "Invalid bot ID" }, 400);
+      }
+
+      const { prompt } = c.req.valid("json");
+
+      // Record this request
+      imageRateLimit.recordRequest(userId);
+
+      const result = await chatService.processImageGeneration(userId, {
+        botId,
+        prompt,
+      });
+
+      return c.json(result);
+    } catch (error: any) {
+      if (error instanceof HTTPException) {
+        return error.getResponse();
+      }
+      console.error("Error in image generation endpoint:", error);
+      return c.json({ error: "Internal server error" }, 500);
+    }
+  }
+);
+
+// Generate an image in an existing conversation
+chatController.post(
+  "/image/bot/:botId/conversation/:conversationId",
+  zValidator("json", imageGenerationDto),
+  async (c) => {
+    try {
+      const userId = c.var.userId;
+
+      // Check rate limit
+      if (!imageRateLimit.canMakeRequest(userId)) {
+        return c.json(
+          {
+            error:
+              "Too many image generation requests. Please try again later.",
+          },
+          429
+        );
+      }
+
+      const botIdParam = c.req.param("botId");
+      const conversationIdParam = c.req.param("conversationId");
+
+      const botId = parseInt(botIdParam, 10);
+      const conversationId = parseInt(conversationIdParam, 10);
+
+      if (isNaN(botId) || isNaN(conversationId)) {
+        return c.json({ error: "Invalid ID parameters" }, 400);
+      }
+
+      const { prompt } = c.req.valid("json");
+
+      // Record this request
+      imageRateLimit.recordRequest(userId);
+
+      // Process the image generation request
+      const result = await chatService.processImageGeneration(userId, {
+        botId,
+        conversationId,
+        prompt,
+      });
+
+      return c.json(result);
+    } catch (error: any) {
+      if (error instanceof HTTPException) {
+        return error.getResponse();
+      }
+      console.error("Error in image generation endpoint:", error);
+      return c.json({ error: "Internal server error" }, 500);
+    }
+  }
+);
+
+// Code generation endpoints
+
+// Generate code with a specific bot (new conversation)
+chatController.post(
+  "/code/bot/:botId",
+  zValidator("json", codeGenerationDto),
+  async (c) => {
+    try {
+      const userId = c.var.userId;
+      const botIdParam = c.req.param("botId");
+      const botId = parseInt(botIdParam, 10);
+
+      if (isNaN(botId)) {
+        return c.json({ error: "Invalid bot ID" }, 400);
+      }
+
+      const { message } = c.req.valid("json");
+
+      const result = await chatService.processCodeGeneration(userId, {
+        botId,
+        message,
+      });
+
+      return c.json(result);
+    } catch (error: any) {
+      if (error instanceof HTTPException) {
+        return error.getResponse();
+      }
+      console.error("Error in code generation endpoint:", error);
+      return c.json({ error: "Internal server error" }, 500);
+    }
+  }
+);
+
+// Generate code in an existing conversation
+chatController.post(
+  "/code/bot/:botId/conversation/:conversationId",
+  zValidator("json", codeGenerationDto),
+  async (c) => {
+    try {
+      const userId = c.var.userId;
+      const botIdParam = c.req.param("botId");
+      const conversationIdParam = c.req.param("conversationId");
+
+      const botId = parseInt(botIdParam, 10);
+      const conversationId = parseInt(conversationIdParam, 10);
+
+      if (isNaN(botId) || isNaN(conversationId)) {
+        return c.json({ error: "Invalid ID parameters" }, 400);
+      }
+
+      const { message } = c.req.valid("json");
+
+      // Process the code generation request
+      const result = await chatService.processCodeGeneration(userId, {
+        botId,
+        conversationId,
+        message,
+      });
+
+      return c.json(result);
+    } catch (error: any) {
+      if (error instanceof HTTPException) {
+        return error.getResponse();
+      }
+      console.error("Error in code generation endpoint:", error);
+      return c.json({ error: "Internal server error" }, 500);
+    }
+  }
+);
+
+// Generate streaming code with a specific bot (new conversation)
+chatController.post(
+  "/stream/code/bot/:botId",
+  zValidator("json", codeGenerationDto),
+  async (c) => {
+    try {
+      const userId = c.var.userId;
+      const botIdParam = c.req.param("botId");
+      const botId = parseInt(botIdParam, 10);
+
+      if (isNaN(botId)) {
+        return c.json({ error: "Invalid bot ID" }, 400);
+      }
+
+      const { message } = c.req.valid("json");
+
+      // Process the streaming code generation
+      const {
+        responseStream,
+        bot,
+        conversation,
+        savedUserMessage,
+        finalizeChat,
+      } = await chatService.processStreamingCodeGeneration(userId, {
+        botId,
+        message,
+      });
+
+      // Set headers for text/event-stream
+      c.header("Content-Type", "text/event-stream");
+      c.header("Cache-Control", "no-cache");
+      c.header("Connection", "keep-alive");
+
+      // Start with metadata as the first event
+      const metadataEvent = {
+        event: "metadata",
+        data: JSON.stringify({
+          bot,
+          conversation,
+          userMessage: savedUserMessage,
+        }),
+      };
+
+      // Create a stream for the response
+      const responseBody = new ReadableStream({
+        async start(controller) {
+          // Send the metadata event first
+          controller.enqueue(
+            `event: ${metadataEvent.event}\ndata: ${metadataEvent.data}\n\n`
+          );
+
+          // Create a reader for the message stream
+          const reader = responseStream.getReader();
+
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              // Send each chunk as a "chunk" event
+              controller.enqueue(`event: chunk\ndata: ${value}\n\n`);
+            }
+
+            // When stream is done, save the complete response
+            await finalizeChat();
+
+            // Send a "done" event to signal completion
+            controller.enqueue(`event: done\ndata: {}\n\n`);
+            controller.close();
+          } catch (error) {
+            console.error("Streaming error:", error);
+            controller.enqueue(
+              `event: error\ndata: ${JSON.stringify({
+                error: "Streaming error occurred",
+              })}\n\n`
+            );
+            controller.close();
+          }
+        },
+      });
+
+      return new Response(responseBody);
+    } catch (error: any) {
+      if (error instanceof HTTPException) {
+        return error.getResponse();
+      }
+      console.error("Error in streaming code generation endpoint:", error);
+      return c.json({ error: "Internal server error" }, 500);
+    }
+  }
+);
+
+// Continue a conversation with streaming code generation
+chatController.post(
+  "/stream/code/bot/:botId/conversation/:conversationId",
+  zValidator("json", codeGenerationDto),
+  async (c) => {
+    try {
+      const userId = c.var.userId;
+      const botIdParam = c.req.param("botId");
+      const conversationIdParam = c.req.param("conversationId");
+
+      const botId = parseInt(botIdParam, 10);
+      const conversationId = parseInt(conversationIdParam, 10);
+
+      if (isNaN(botId) || isNaN(conversationId)) {
+        return c.json({ error: "Invalid ID parameters" }, 400);
+      }
+
+      const { message } = c.req.valid("json");
+
+      // Process the streaming code generation
+      const {
+        responseStream,
+        bot,
+        conversation,
+        savedUserMessage,
+        finalizeChat,
+      } = await chatService.processStreamingCodeGeneration(userId, {
+        botId,
+        conversationId,
+        message,
+      });
+
+      // Set headers for text/event-stream
+      c.header("Content-Type", "text/event-stream");
+      c.header("Cache-Control", "no-cache");
+      c.header("Connection", "keep-alive");
+
+      // Start with metadata as the first event
+      const metadataEvent = {
+        event: "metadata",
+        data: JSON.stringify({
+          bot,
+          conversation,
+          userMessage: savedUserMessage,
+        }),
+      };
+
+      // Create a stream for the response
+      const responseBody = new ReadableStream({
+        async start(controller) {
+          // Send the metadata event first
+          controller.enqueue(
+            `event: ${metadataEvent.event}\ndata: ${metadataEvent.data}\n\n`
+          );
+
+          // Create a reader for the message stream
+          const reader = responseStream.getReader();
+
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              // Send each chunk as a "chunk" event
+              controller.enqueue(`event: chunk\ndata: ${value}\n\n`);
+            }
+
+            // When stream is done, save the complete response
+            await finalizeChat();
+
+            // Send a "done" event to signal completion
+            controller.enqueue(`event: done\ndata: {}\n\n`);
+            controller.close();
+          } catch (error) {
+            console.error("Streaming error:", error);
+            controller.enqueue(
+              `event: error\ndata: ${JSON.stringify({
+                error: "Streaming error occurred",
+              })}\n\n`
+            );
+            controller.close();
+          }
+        },
+      });
+
+      return new Response(responseBody);
+    } catch (error: any) {
+      if (error instanceof HTTPException) {
+        return error.getResponse();
+      }
+      console.error("Error in streaming code generation endpoint:", error);
+      return c.json({ error: "Internal server error" }, 500);
+    }
+  }
+);
+
+// Simple in-memory rate limiter for image generation
+// This is a basic implementation - consider using Redis or a proper rate limiting package in production
+const imageRateLimit = {
+  // Store user request timestamps: userId -> array of request timestamps
+  requests: new Map<string, number[]>(),
+  // Maximum requests per minute
+  maxRequestsPerMinute: 4,
+  // Window size in ms (1 minute)
+  windowMs: 60 * 1000,
+
+  // Check if user can make a request
+  canMakeRequest(userId: string): boolean {
+    const now = Date.now();
+    const userRequests = this.requests.get(userId) || [];
+
+    // Filter to only include requests within the current window
+    const recentRequests = userRequests.filter(
+      (timestamp) => now - timestamp < this.windowMs
+    );
+
+    // Update the requests array with only recent ones
+    this.requests.set(userId, recentRequests);
+
+    // Check if user is within limit
+    return recentRequests.length < this.maxRequestsPerMinute;
+  },
+
+  // Record a request
+  recordRequest(userId: string): void {
+    const now = Date.now();
+    const userRequests = this.requests.get(userId) || [];
+    this.requests.set(userId, [...userRequests, now]);
+  },
+};
 
 export default chatController;
