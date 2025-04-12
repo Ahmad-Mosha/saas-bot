@@ -16,6 +16,10 @@ app.use(cors());
 // Static file middleware for public directory
 app.use("/public/*", serveStatic({ root: "./" }));
 
+// Serve generated images from uploads directory
+// This makes image files accessible via /uploads/[userId]/[filename]
+app.use("/uploads/*", serveStatic({ root: "./public" }));
+
 // Routes
 app.get("/", (c) => c.json({ message: "API is running" }));
 
